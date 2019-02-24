@@ -12,6 +12,8 @@
     <preference for="Magento\ImportService\Api\Data\SourceUploadResponseInterface" type="Magento\ImportService\Model\SourceUploadResponse" />
     <preference for="Magento\ImportService\Api\SourceRepositoryInterface"
                 type="Magento\ImportService\Model\SourceRepository"/>
+    <preference for="Magento\ImportService\Api\UuidManagementInterface"
+                type="Magento\ImportService\Model\Source\UuidManagement" />
     <type name="Magento\ImportService\Model\Import\SourceProcessorPool">
         <arguments>
             <argument name="sourceProcessors" xsi:type="array">

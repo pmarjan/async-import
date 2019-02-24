@@ -12,6 +12,7 @@ use Magento\Framework\Filesystem;
 use Magento\ImportService\Exception as ImportServiceException;
 use Magento\ImportService\Model\Import\SourceProcessorPool;
 use Magento\ImportService\Model\Source\Validator;
+use Magento\ImportService\Model\Source\UuidManagement;
 
 /**
  * CSV files processor for asynchronous import
@@ -29,17 +30,25 @@ class ExternalFileProcessor implements SourceProcessorInterface
     private $validator;
 
     /**
+     * @var \Magento\ImportService\Model\Source\UuidManagement
+     */
+    private $uuid;
+
+    /**
      * LocalPathFileProcessor constructor
      *
      * @param FileSystem $fileSystem
      * @param Validator $validator
+     * @param UuidManagement $uuid
      */
     public function __construct(
         FileSystem $fileSystem,
-        Validator $validator
+        Validator $validator,
+        UuidManagement $uuid
     ) {
         $this->fileSystem = $fileSystem;
         $this->validator = $validator;
+        $this->uuid = $uuid;
     }
 
     /**
@@ -71,8 +80,11 @@ class ExternalFileProcessor implements SourceProcessorInterface
         /** @var string $workingDirectory */
         $workingDirectory = SourceProcessorPool::WORKING_DIR;
 
+        /** @var string $fileId */
+        $fileId = $this->uuid->generateUuid();
+
         /** @var string $fileName */
-        $fileName =  uniqid() . '.' . $source->getSourceType();
+        $fileName = $fileId . '.' . $source->getSourceType();
 
         /** @var \Magento\Framework\Filesystem\Directory\WriteInterface $writeInterface */
         $writeInterface = $this->fileSystem->getDirectoryWrite(DirectoryList::VAR_DIR);
@@ -86,7 +98,7 @@ class ExternalFileProcessor implements SourceProcessorInterface
         /** Attempt a copy, may throw \Magento\Framework\Exception\FileSystemException */
         $writeInterface->getDriver()->copy($source->getImportData(), $copyFileFullPath);
 
-        return $response->setSource($source->setImportData($fileName))
+        return $response->setUuid($fileId)
             ->setStatus($response::STATUS_UPLOADED);
     }
 }

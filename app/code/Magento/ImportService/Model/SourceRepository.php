@@ -87,7 +87,7 @@ class SourceRepository implements SourceRepositoryInterface
     public function getById($id)
     {
         $source = $this->sourceFactory->create();
-        $this->sourceResourceModel->load($source, $id);
+        $this->sourceResourceModel->load($source, $id, $source::SOURCE_UUID);
         if (!$source->getId()) {
             throw new NoSuchEntityException(__('Source with id "%1" does not exist.', $id));
         }

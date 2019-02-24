@@ -15,13 +15,13 @@ class SourceUploadResponse extends AbstractModel implements SourceUploadResponse
 {
 
     /**
-     * Get file ID
+     * Get file UUID
      *
-     * @return int
+     * @return string
      */
-    public function getSourceId()
+    public function getUuid()
     {
-        return $this->getData(self::SOURCE_ID);
+        return $this->getData(self::UUID);
     }
 
     /**
@@ -44,22 +44,12 @@ class SourceUploadResponse extends AbstractModel implements SourceUploadResponse
     }
 
     /**
-     * Get source
-     *
-     * @return SourceInterface
-     */
-    public function getSource()
-    {
-        return $this->getData(self::SOURCE_MODEL);
-    }
-
-    /**
-     * @param $sourceId
+     * @param $uuid
      * @return SourceUploadResponse|mixed
      */
-    public function setSourceId($sourceId)
+    public function setUuid($uuid)
     {
-        return $this->setData(self::SOURCE_ID, $sourceId);
+        return $this->setData(self::UUID, $uuid);
     }
 
     /**
@@ -78,14 +68,5 @@ class SourceUploadResponse extends AbstractModel implements SourceUploadResponse
     public function setError($error)
     {
         return $this->setData(self::ERROR, $error);
-    }
-
-    /**
-     * @param SourceInterface $source
-     * @return mixed
-     */
-    public function setSource(SourceInterface $source)
-    {
-        return $this->setData(self::SOURCE_MODEL, $source);
     }
 }
