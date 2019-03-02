@@ -37,6 +37,27 @@ class ExternalFileProcessorTest extends WebapiAbstract
      */
     const TEMPORARY_DIR = 'tmp_importservice/';
 
+    /** 
+     * \Magento\Framework\Filesystem\Directory\WriteInterface $varWriter 
+     */
+    private $varWriter;
+
+    /** 
+     * \Magento\Framework\Filesystem\Directory\WriteInterface $mediaWriter 
+     */
+    private $mediaWriter;
+
+    /**
+     * Set Up
+     */
+    public function setUp()
+    {
+        parent::setUp();
+
+        $this->varWriter = $this->getWriteInterface(DirectoryList::VAR_DIR);
+        $this->mediaWriter = $this->getWriteInterface(DirectoryList::MEDIA);
+    }
+
     /**
      * Test Import Data not set
      */
@@ -47,9 +68,8 @@ class ExternalFileProcessorTest extends WebapiAbstract
             $this->makeRequestData(null)
         );
 
-        $this->assertEquals(SourceUploadResponseInterface::STATUS_FAILED, $result['status']);
+        $this->assertEquals(SourceInterface::STATUS_FAILED, $result['status']);
         $this->assertRegExp('/Invalid request/', $result['error']);
-        $this->assertNull($result['source']);
     }
 
     /**
@@ -64,9 +84,8 @@ class ExternalFileProcessorTest extends WebapiAbstract
             $this->makeRequestData($this->getExternalLink($sampleFileName))
         );
 
-        $this->assertEquals(SourceUploadResponseInterface::STATUS_FAILED, $result['status']);
+        $this->assertEquals(SourceInterface::STATUS_FAILED, $result['status']);
         $this->assertRegExp('/does not exist./', $result['error']);
-        $this->assertNull($result['source']);
     }
 
     /**
@@ -77,14 +96,11 @@ class ExternalFileProcessorTest extends WebapiAbstract
         $sampleFileName = 'importservice-test-' . time() . '.' . self::EXTERNAL_FILE_TYPE;
         $sampleFileContent = 'ABCDEFGHabcdefgh0123456789';
 
-        /** @var \Magento\Framework\Filesystem\Directory\WriteInterface $mediaWriter */
-        $mediaWriter = $this->getWriteInterface(DirectoryList::MEDIA);
-
-        /** @var \Magento\Framework\Filesystem\Directory\WriteInterface $varWriter */
-        $varWriter = $this->getWriteInterface(DirectoryList::VAR_DIR);
-
         /** Create the test file that should be copied */
-        $mediaWriter->writeFile($mediaWriter->getAbsolutePath(self::TEMPORARY_DIR) . $sampleFileName, $sampleFileContent);
+        $this->mediaWriter->writeFile(
+            $this->mediaWriter->getAbsolutePath(self::TEMPORARY_DIR) . $sampleFileName,
+            $sampleFileContent
+        );
 
         /** Make the Api call */
         $result = $this->_webApiCall(
@@ -93,30 +109,72 @@ class ExternalFileProcessorTest extends WebapiAbstract
         );
 
         /** Assert the response status and the source_id */
-        $this->assertEquals(SourceUploadResponseInterface::STATUS_UPLOADED, $result['status']);
-        $this->assertNotNull($result['source']['import_data']);
+        $this->assertEquals(SourceInterface::STATUS_UPLOADED, $result['status']);
+        $this->assertNotNull($result['uuid']);
 
-        if (isset($result['source']['import_data'])) {
+        if (isset($result['uuid'])) {
 
             /** @var string $nameCopiedFile */
-            $nameCopiedFile = $result['source']['import_data'];
+            $nameCopiedFile = $result['uuid'];
 
             /** @var string $pathCopiedFile */
-            $pathCopiedFile = $varWriter->getAbsolutePath(SourceProcessorPool::WORKING_DIR)
-                . $nameCopiedFile;
+            $pathCopiedFile = $this->getPathToCopiedFile($nameCopiedFile);
 
             /** Assert that the content of the copied file matches the original content */
             $this->assertEquals(
                 strlen($sampleFileContent),
-                strlen($varWriter->readFile($pathCopiedFile))
+                strlen($this->readCopiedFile($pathCopiedFile))
             );
 
             /** Remove the file from the working directory */
-            $varWriter->getDriver()->deleteFile($pathCopiedFile);
+            $this->removeCopiedFile($pathCopiedFile);
         }
 
         /** Remove tmp dir */
-        $mediaWriter->delete($mediaWriter->getAbsolutePath(self::TEMPORARY_DIR));
+        $this->remoteMediaTmpDir();
+    }
+
+    /**
+     * Test reachable file when sending UUID
+     */
+    public function testReachableFileWhenSendingUuid()
+    {
+        $sampleFileName = 'importservice-test-send-uuid-' . time() . '.' . self::EXTERNAL_FILE_TYPE;
+        $sampleFileContent = 'ABCDEFGH-abcdefgh-0123456789-00000000';
+
+        /** Create the test file that should be copied */
+        $this->mediaWriter->writeFile(
+            $this->mediaWriter->getAbsolutePath(self::TEMPORARY_DIR) . $sampleFileName,
+            $sampleFileContent
+        );
+
+        /** @var string $desiredUuid */
+        $desiredUuid = $this->generateId();
+
+        /** Make the Api call */
+        $result = $this->_webApiCall(
+            $this->makeServiceInfo(),
+            $this->makeRequestDataWithUuid(
+                $this->getExternalLink($sampleFileName),
+                $desiredUuid
+            )
+        );
+
+        /** Assert the response status and the source_id */
+        $this->assertEquals(SourceInterface::STATUS_UPLOADED, $result['status']);
+        $this->assertEquals($desiredUuid, $result['uuid']);
+
+        if (isset($result['uuid'])) {
+
+            /** @var string $nameCopiedFile */
+            $nameCopiedFile = $result['uuid'];
+
+            /** Remove the file from the working directory */
+            $this->removeCopiedFile($this->getPathToCopiedFile($nameCopiedFile));
+        }
+
+        /** Remove tmp dir */
+        $this->remoteMediaTmpDir();
     }
 
     /**
@@ -155,6 +213,23 @@ class ExternalFileProcessorTest extends WebapiAbstract
         ];
     }
 
+        /**
+     * Sets up the request array
+     * @param string $import_data
+     * @param string $uuid
+     * @return array
+     */
+    private function makeRequestDataWithUuid($import_data, $uuid)
+    {
+        return ['source' => [
+                SourceInterface::SOURCE_TYPE => self::EXTERNAL_FILE_TYPE,
+                SourceInterface::IMPORT_TYPE => self::IMPORT_TYPE,
+                SourceInterface::IMPORT_DATA => $import_data,
+                SourceInterface::UUID => $uuid
+            ]
+        ];
+    }
+
     /**
      * Gets the public link to the file to be copied
      * @param $sampleFileName
@@ -164,7 +239,8 @@ class ExternalFileProcessorTest extends WebapiAbstract
     private function getExternalLink($sampleFileName)
     {
         /** @var \Magento\Store\Model\StoreManagerInterface $storeManager */
-        $storeManager = Bootstrap::getObjectManager()->create(\Magento\Store\Model\StoreManagerInterface::class);
+        $storeManager = Bootstrap::getObjectManager()
+            ->create(\Magento\Store\Model\StoreManagerInterface::class);
 
         return $storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA)
             . self::TEMPORARY_DIR
@@ -179,8 +255,62 @@ class ExternalFileProcessorTest extends WebapiAbstract
      */
     private function getWriteInterface($dir)
     {
-        $fileSystem = Bootstrap::getObjectManager()->create(\Magento\Framework\Filesystem::class);
+        $fileSystem = Bootstrap::getObjectManager()
+            ->create(\Magento\Framework\Filesystem::class);
 
         return $fileSystem->getDirectoryWrite($dir);
+    }
+
+    /**
+     * Generate UUID
+     * @return string
+     */
+    private function generateId()
+    {
+        /** @var \Magento\Store\Model\StoreManagerInterface $identityGenerator */
+        $identityGenerator = Bootstrap::getObjectManager()
+            ->create(\Magento\Framework\DataObject\IdentityGeneratorInterface::class);
+
+        return $identityGenerator->generateId();
+    }
+
+    /**
+     * @param string $nameCopiedFile
+     * @return string
+     */
+    private function getPathToCopiedFile($nameCopiedFile)
+    {
+        return $this->varWriter->getAbsolutePath(SourceProcessorPool::WORKING_DIR)
+            . $nameCopiedFile
+            . '.'
+            . self::EXTERNAL_FILE_TYPE;
+    }
+
+    /**
+     * @param string $pathCopiedFile
+     * @return string
+     */
+    private function readCopiedFile($pathCopiedFile)
+    {
+        return $this->varWriter->readFile($pathCopiedFile);
+    }
+
+    /**
+     * @param string $pathCopiedFile
+     * @return bool
+     */
+    private function removeCopiedFile($pathCopiedFile)
+    {
+        return $this->varWriter->getDriver()->deleteFile($pathCopiedFile);
+    }
+
+    /**
+     * Remove the temporary directory
+     */
+    private function remoteMediaTmpDir()
+    {
+        $this->mediaWriter->delete(
+            $this->mediaWriter->getAbsolutePath(self::TEMPORARY_DIR)
+        );
     }
 }

@@ -18,6 +18,8 @@ use Magento\Framework\Filesystem;
 use Magento\ImportService\Api\SourceRepositoryInterface;
 use Magento\ImportService\ImportServiceException;
 use Magento\ImportService\Model\Import\SourceTypesValidatorInterface;
+use Magento\ImportService\Model\Source\Validator;
+use Magento\Framework\DataObject\IdentityGeneratorInterface as IdentityGenerator;
 
 /**
  * CSV files processor for asynchronous import
@@ -70,23 +72,39 @@ class LocalPathFileProcessor implements SourceProcessorInterface
     private $source;
 
     /**
+     * @var \Magento\Framework\DataObject\IdentityGeneratorInterface
+     */
+    private $identityGenerator;
+
+    /**
+     * @var \Magento\ImportService\Model\Source\Validator
+     */
+    private $validator;
+
+    /**
      * LocalPathFileProcessor constructor
      *
      * @param File $fileSystemIo
      * @param Filesystem $fileSystem
      * @param SourceTypesValidatorInterface $sourceTypesValidator
      * @param SourceRepositoryInterface $sourceRepository
+     * @param IdentityGenerator $identityGenerator
+     * @param Validator $validator
      */
     public function __construct(
         File $fileSystemIo,
         Filesystem $fileSystem,
         SourceTypesValidatorInterface $sourceTypesValidator,
-        SourceRepositoryInterface $sourceRepository
+        SourceRepositoryInterface $sourceRepository,
+        IdentityGenerator $identityGenerator,
+        Validator $validator
     ) {
         $this->fileSystemIo = $fileSystemIo;
         $this->sourceTypesValidator = $sourceTypesValidator;
         $this->fileSystem = $fileSystem;
         $this->sourceRepository = $sourceRepository;
+        $this->identityGenerator = $identityGenerator;
+        $this->validator = $validator;
     }
 
     /**
@@ -104,7 +122,7 @@ class LocalPathFileProcessor implements SourceProcessorInterface
             $this->saveFile();
             $source = $this->saveSource();
             $response->setStatus($source->getStatus());
-            $response->setSourceId($source->getSourceId());
+            $response->setUuid($source->getUuid());
         } catch (CouldNotSaveException $e) {
             $this->removeFile($source->getImportData());
             throw new ImportServiceException(__($e->getMessage()));
@@ -151,11 +169,29 @@ class LocalPathFileProcessor implements SourceProcessorInterface
     {
         if (!$this->newFileName) {
             $this->newFileName = self::IMPORT_SOURCE_FILE_PATH . '/'
-                . uniqid()
+                . $this->generateId()
                 . '.' . $this->source->getSourceType();
         }
 
         return $this->newFileName;
+    }
+
+    /**
+     * Generates UUID, unless already set on $this->source
+     * 
+     * @return string
+     */
+    private function generateId()
+    {
+        /** @var string $fileId */
+        $fileId = $this->source->getUuid();
+
+        if (!$fileId || !$this->validator->validateUuid($this->source)) {
+            $fileId = $this->identityGenerator->generateId();
+            $this->source->setUuid($fileId);
+        }
+
+        return $fileId;
     }
 
     /**

@@ -12,20 +12,18 @@ namespace Magento\ImportService\Api\Data;
  */
 interface SourceUploadResponseInterface
 {
-    const SOURCE_ID = 'source_id';
+    const UUID = 'uuid';
 
     const STATUS = 'status';
 
     const ERROR = 'error';
 
-    const SOURCE_MODEL = 'source';
-
     /**
-     * Get file ID
+     * Get file UUID
      *
-     * @return int
+     * @return string
      */
-    public function getSourceId();
+    public function getUuid();
 
     /**
      * Get file status
@@ -42,17 +40,10 @@ interface SourceUploadResponseInterface
     public function getError();
 
     /**
-     * Get source
-     *
-     * @return \Magento\ImportService\Api\Data\SourceInterface
-     */
-    public function getSource();
-
-    /**
-     * @param $sourceId
+     * @param $uuid
      * @return mixed
      */
-    public function setSourceId($sourceId);
+    public function setUuid($uuid);
 
     /**
      * @param $status
@@ -65,10 +56,4 @@ interface SourceUploadResponseInterface
      * @return mixed
      */
     public function setError($error);
-
-    /**
-     * @param \Magento\ImportService\Api\Data\SourceInterface $source
-     * @return mixed
-     */
-    public function setSource(\Magento\ImportService\Api\Data\SourceInterface $source);
 }

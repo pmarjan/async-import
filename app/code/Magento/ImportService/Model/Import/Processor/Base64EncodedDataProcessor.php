@@ -9,7 +9,9 @@ namespace Magento\ImportService\Model\Import\Processor;
 
 use Magento\Framework\Filesystem;
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\ImportService\Exception as ImportServiceException;
+use Magento\Framework\DataObject\IdentityGeneratorInterface as IdentityGenerator;
+use Magento\ImportService\ImportServiceException;
+use Magento\ImportService\Model\Source\Validator;
 
 /**
  * Base64 encoded data processor for asynchronous import
@@ -37,13 +39,29 @@ class Base64EncodedDataProcessor implements SourceProcessorInterface
     private $filesystem;
 
     /**
+     * @var \Magento\Framework\DataObject\IdentityGeneratorInterface
+     */
+    private $identityGenerator;
+
+    /**
+     * @var \Magento\ImportService\Model\Source\Validator
+     */
+    private $validator;
+
+    /**
      * LocalPathFileProcessor constructor.
      * @param Filesystem $filesystem
+     * @param IdentityGenerator $identityGenerator
+     * @param Validator $validator
      */
     public function __construct(
-        Filesystem $filesystem
+        Filesystem $filesystem,
+        IdentityGenerator $identityGenerator,
+        Validator $validator
     ) {
         $this->filesystem = $filesystem;
+        $this->identityGenerator = $identityGenerator;
+        $this->validator = $validator;
     }
 
     /**
@@ -51,12 +69,16 @@ class Base64EncodedDataProcessor implements SourceProcessorInterface
      */
     public function processUpload(\Magento\ImportService\Api\Data\SourceInterface $source, \Magento\ImportService\Api\Data\SourceUploadResponseInterface $response)
     {
-        /** @var string $fileName */
-        $fileName = rand();
+        /** @var string $fileId */
+        $fileId = $source->getUuid();
+
+        if (!$fileId || !$this->validator->validateUuid($source)) {
+            $fileId = $this->identityGenerator->generateId();
+        }
 
         /** @var string $contentFilePath */
         $contentFilePath =  self::DIR_IMPORT_DESTINATION
-            . $fileName
+            . $fileId
             . '.'
             . $source->getSourceType();
 
@@ -80,8 +102,8 @@ class Base64EncodedDataProcessor implements SourceProcessorInterface
         }
 
         /** Update source's import data */
-        $source->setImportData($fileName);
+        $source->setImportData($fileId);
 
-        return $response->setSource($source)->setSourceId($fileName)->setStatus($response::STATUS_UPLOADED);
+        return $response->setUuid($fileId)->setStatus($source::STATUS_UPLOADED);
     }
 }

@@ -8,8 +8,9 @@ declare(strict_types=1);
 namespace Magento\ImportService\Model\Import\Processor;
 
 use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\DataObject\IdentityGeneratorInterface as IdentityGenerator;
 use Magento\Framework\Filesystem;
-use Magento\ImportService\Exception as ImportServiceException;
+use Magento\ImportService\ImportServiceException;
 use Magento\ImportService\Model\Import\SourceProcessorPool;
 use Magento\ImportService\Model\Source\Validator;
 
@@ -24,6 +25,11 @@ class ExternalFileProcessor implements SourceProcessorInterface
     private $fileSystem;
 
     /**
+     * @var \Magento\Framework\DataObject\IdentityGeneratorInterface
+     */
+    private $identityGenerator;
+
+    /**
      * @var \Magento\ImportService\Model\Source\Validator
      */
     private $validator;
@@ -32,13 +38,16 @@ class ExternalFileProcessor implements SourceProcessorInterface
      * LocalPathFileProcessor constructor
      *
      * @param FileSystem $fileSystem
+     * @param IdentityGenerator $identityGenerator
      * @param Validator $validator
      */
     public function __construct(
         FileSystem $fileSystem,
+        IdentityGenerator $identityGenerator,
         Validator $validator
     ) {
         $this->fileSystem = $fileSystem;
+        $this->identityGenerator = $identityGenerator;
         $this->validator = $validator;
     }
 
@@ -71,8 +80,15 @@ class ExternalFileProcessor implements SourceProcessorInterface
         /** @var string $workingDirectory */
         $workingDirectory = SourceProcessorPool::WORKING_DIR;
 
+        /** @var string $fileId */
+        $fileId = $source->getUuid();
+
+        if (!$fileId || !$this->validator->validateUuid($source)) {
+            $fileId = $this->identityGenerator->generateId();
+        }
+
         /** @var string $fileName */
-        $fileName =  uniqid() . '.' . $source->getSourceType();
+        $fileName = $fileId . '.' . $source->getSourceType();
 
         /** @var \Magento\Framework\Filesystem\Directory\WriteInterface $writeInterface */
         $writeInterface = $this->fileSystem->getDirectoryWrite(DirectoryList::VAR_DIR);
@@ -81,12 +97,12 @@ class ExternalFileProcessor implements SourceProcessorInterface
         $writeInterface->create($workingDirectory);
 
         /** @var string $copyFileFullPath*/
-        $copyFileFullPath =  $writeInterface->getAbsolutePath($workingDirectory) . $fileName;
+        $copyFileFullPath = $writeInterface->getAbsolutePath($workingDirectory) . $fileName;
 
         /** Attempt a copy, may throw \Magento\Framework\Exception\FileSystemException */
         $writeInterface->getDriver()->copy($source->getImportData(), $copyFileFullPath);
 
-        return $response->setSource($source->setImportData($fileName))
-            ->setStatus($response::STATUS_UPLOADED);
+        return $response->setUuid($fileId)
+            ->setStatus($source::STATUS_UPLOADED);
     }
 }
