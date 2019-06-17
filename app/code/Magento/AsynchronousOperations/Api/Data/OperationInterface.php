@@ -11,8 +11,10 @@ namespace Magento\AsynchronousOperations\Api\Data;
  * @api
  * @since 100.2.0
  */
-interface OperationInterface extends \Magento\Framework\Bulk\OperationInterface
+interface OperationInterface extends \Magento\Framework\Bulk\OperationInterface, \Magento\AsynchronousOperationsRedis\Api\RedisIdentityInterface
 {
+    const REDIS_PREFIX = 'asynchronous.operations.operation';
+
     /**
      * Retrieve existing extension attributes object.
      *

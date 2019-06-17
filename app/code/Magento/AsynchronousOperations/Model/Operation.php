@@ -162,4 +162,20 @@ class Operation extends DataObject implements OperationInterface
     ) {
         return $this->setData(self::EXTENSION_ATTRIBUTES_KEY, $extensionAttributes);
     }
+
+    /**
+     * @return string
+     */
+    public function getRedisKey()
+    {
+        return self::REDIS_PREFIX . self::SEPARATOR . $this->getBulkUuid();
+    }
+
+    /**
+     * @return string
+     */
+    public function getKeyType()
+    {
+        return self::TYPE_HASH;
+    }
 }

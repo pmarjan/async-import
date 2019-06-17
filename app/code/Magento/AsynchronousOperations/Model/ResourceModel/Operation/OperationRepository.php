@@ -13,7 +13,7 @@ use Magento\AsynchronousOperations\Api\Data\OperationInterfaceFactory;
 use Magento\Framework\MessageQueue\MessageValidator;
 use Magento\Framework\MessageQueue\MessageEncoder;
 use Magento\Framework\Serialize\Serializer\Json;
-use Magento\Framework\EntityManager\EntityManager;
+use Magento\AsynchronousOperationsRedis\EntityManager\EntityManagerFactory;
 
 /**
  * Create operation for list of bulk operations.
@@ -31,7 +31,7 @@ class OperationRepository
     private $jsonSerializer;
 
     /**
-     * @var EntityManager
+     * @var Magento\Framework\EntityManager\EntityManager | Magento\AsynchronousOperationsRedis\EntityManager\EntityManager
      */
     private $entityManager;
 
@@ -47,14 +47,14 @@ class OperationRepository
 
     /**
      * @param OperationInterfaceFactory $operationFactory
-     * @param EntityManager $entityManager
+     * @param EntityManagerFactory $entityManagerFactory
      * @param MessageValidator $messageValidator
      * @param MessageEncoder $messageEncoder
      * @param Json $jsonSerializer
      */
     public function __construct(
         OperationInterfaceFactory $operationFactory,
-        EntityManager $entityManager,
+        EntityManagerFactory $entityManagerFactory,
         MessageValidator $messageValidator,
         MessageEncoder $messageEncoder,
         Json $jsonSerializer
@@ -63,7 +63,7 @@ class OperationRepository
         $this->jsonSerializer = $jsonSerializer;
         $this->messageEncoder = $messageEncoder;
         $this->messageValidator = $messageValidator;
-        $this->entityManager = $entityManager;
+        $this->entityManager = $entityManagerFactory->create();
     }
 
     /**

@@ -11,9 +11,11 @@ namespace Magento\AsynchronousOperations\Api\Data;
  * @api
  * @since 100.2.0
  */
-interface BulkSummaryInterface extends \Magento\Framework\Bulk\BulkSummaryInterface
+interface BulkSummaryInterface extends \Magento\Framework\Bulk\BulkSummaryInterface, \Magento\AsynchronousOperationsRedis\Api\RedisIdentityInterface
 {
     const USER_TYPE = 'user_type';
+
+    const REDIS_PREFIX = 'asynchronous.operations.bulk.summary';
 
     /**
      * Retrieve existing extension attributes object.
