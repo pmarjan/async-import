@@ -10,20 +10,21 @@ use Magento\AsynchronousOperationsRedis\Api\ConfigInterface;
 use Magento\AsynchronousOperationsRedis\EntityManager\EntityManager as RedisEntityManager;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\EntityManager\EntityManager as DefaultEntityManager;
+use Magento\Framework\Module\ModuleManagerInterface;
 
 class EntityManagerFactory
 {
-    /** @var \Magento\AsynchronousOperationsRedis\Api\ConfigInterface */
-    protected $config;
+    /** @var Magento\Framework\Module\ModuleManagerInterface  */
+    private $moduleManager;
 
     /**
      * EntityManagerFactory constructor.
-     * @param ConfigInterface $config
+     * @param ModuleManagerInterface $moduleManager
      */
     public function __construct(
-        ConfigInterface $config
+        ModuleManagerInterface $moduleManager
     ) {
-        $this->config = $config;
+        $this->moduleManager = $moduleManager;
     }
 
     /**
@@ -31,7 +32,14 @@ class EntityManagerFactory
      */
     public function create()
     {
-        if ($this->config->requiresRedis()) {
+        if (!$this->moduleManager->isEnabled('Magento_AsynchronousOperationsRedis')) {
+            return ObjectManager::getInstance()->get(DefaultEntityManager::class);
+        }
+
+        /** @var ConfigInterface $config */
+        $config = ObjectManager::getInstance()->get(ConfigInterface::class);
+
+        if ($config->requiresRedis()) {
             return ObjectManager::getInstance()->get(RedisEntityManager::class);
         }
 
