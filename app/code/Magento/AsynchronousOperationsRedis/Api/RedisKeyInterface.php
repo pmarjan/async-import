@@ -29,9 +29,10 @@ interface RedisKeyInterface
 
     /**
      * @param object $entity
+     * @param array $entityConfig
      * @return string
      */
-    public function getId($entity);
+    public function getId($entity, $entityConfig);
 
     /**
      * Check if a key exists

@@ -10,6 +10,7 @@ use Magento\AsynchronousOperationsRedis\Api\RedisIdentityInterface;
 use Magento\AsynchronousOperationsRedis\Api\RedisKeyInterface;
 use Magento\AsynchronousOperationsRedis\Model\Connection;
 use Ramsey\Uuid\Uuid;
+use Magento\Framework\Encryption\Encryptor;
 
 abstract class AbstractKey implements RedisKeyInterface
 {
@@ -19,23 +20,44 @@ abstract class AbstractKey implements RedisKeyInterface
     protected $connection;
 
     /**
+     * @var Magento\Framework\Encryption\Encryptor
+     */
+    protected $encryptor;
+
+    /**
      * AbstractKey constructor.
      * @param Connection $connection
+     * @param Encryptor $encryptor
      */
     public function __construct(
-        Connection $connection
+        Connection $connection,
+        Encryptor $encryptor
     ) {
         $this->connection = $connection;
+        $this->encryptor = $encryptor;
     }
 
     /**
      * @param object $entity
+     * @param array $entityConfig
      * @return string
      */
-    public function getId($entity)
+    public function getId($entity, $entityConfig)
     {
-        return $entity->getRedisKey();
+        /** @var string $identifier */
+        $identifier = '';
+
+        if ($entityConfig['identifier'] == 'uuid') {
+            $identifier = $entity->getData('uuid') ? $entity->getData('uuid') : $entity->getData('bulk_uuid');
+        }
+
+        if ($entityConfig['identifier'] == 'serialized_data') {
+            $identifier = $this->encryptor->hash($entity->getData('serialized_data'), Encryptor::HASH_VERSION_SHA256);
+        }
+
+        return $entityConfig['key_prefix'] . RedisIdentityInterface::SEPARATOR . $identifier;
     }
+
 
     /**
      * Check if a key exists

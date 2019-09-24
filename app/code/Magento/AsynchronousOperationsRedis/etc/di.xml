@@ -8,4 +8,22 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <preference for="Magento\AsynchronousOperationsRedis\Api\ConfigInterface"
                 type="Magento\AsynchronousOperationsRedis\Model\Config" />
+    <type name="Magento\AsynchronousOperationsRedis\Model\EntitiesPool">
+        <arguments>
+            <argument name="entities" xsi:type="array">
+                <item name="bulk_summary" xsi:type="array">
+                    <item name="interface" xsi:type="string">Magento\AsynchronousOperations\Api\Data\BulkSummaryInterface</item>
+                    <item name="type" xsi:type="string">hash</item>
+                    <item name="key_prefix" xsi:type="string">asynchronous.operations.bulk.summary</item>
+                    <item name="identifier" xsi:type="string">uuid</item>
+                </item>
+                <item name="operation" xsi:type="array">
+                    <item name="interface" xsi:type="string">Magento\AsynchronousOperations\Api\Data\OperationInterface</item>
+                    <item name="type" xsi:type="string">hash</item>
+                    <item name="key_prefix" xsi:type="string">asynchronous.operations.operation</item>
+                    <item name="identifier" xsi:type="string">serialized_data</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
 </config>

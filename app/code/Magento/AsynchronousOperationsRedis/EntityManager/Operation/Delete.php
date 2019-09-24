@@ -6,13 +6,12 @@
 
 namespace Magento\AsynchronousOperationsRedis\EntityManager\Operation;
 
-use Magento\AsynchronousOperationsRedis\Api\RedisIdentityInterface;
-use Magento\AsynchronousOperationsRedis\Exception\RedisIdentityNoFoundException;
 use Magento\AsynchronousOperationsRedis\Model\Connection;
 use Magento\Framework\EntityManager\EventManager;
 use Magento\Framework\EntityManager\Operation\DeleteInterface;
 use Magento\AsynchronousOperationsRedis\EntityManager\Hydrator;
 use Magento\AsynchronousOperationsRedis\KeyManager\KeyPool;
+use Magento\AsynchronousOperationsRedis\Model\EntitiesPool;
 
 class Delete implements DeleteInterface
 {
@@ -28,23 +27,29 @@ class Delete implements DeleteInterface
     /** @var \Magento\AsynchronousOperationsRedis\KeyManager\KeyPool */
     private $keyPool;
 
+    /** @var \Magento\AsynchronousOperationsRedis\Model\EntitiesPool  */
+    private $entitiesPool;
+
     /**
-     * Create constructor.
+     * Delete constructor.
      * @param EventManager $eventManager
      * @param Connection $connection
      * @param Hydrator $hydrator
      * @param KeyPool $keyPool
+     * @param EntitiesPool $entitiesPool
      */
     public function __construct(
         EventManager $eventManager,
         Connection $connection,
         Hydrator $hydrator,
-        KeyPool $keyPool
+        KeyPool $keyPool,
+        EntitiesPool $entitiesPool
     ) {
         $this->eventManager = $eventManager;
         $this->connection = $connection;
         $this->hydrator = $hydrator;
         $this->keyPool = $keyPool;
+        $this->entitiesPool = $entitiesPool;
     }
 
     /**
@@ -58,13 +63,11 @@ class Delete implements DeleteInterface
      */
     public function execute($entity, $arguments = [])
     {
-        if (! $entity instanceof RedisIdentityInterface) {
-            throw new RedisIdentityNoFoundException(__('This entity does not has Redis identity'));
-        }
-
+        /** @var array $entityConfig */
+        $entityConfig = $this->entitiesPool->getEntityConfig($entity);
         /** @var \Magento\AsynchronousOperationsRedis\Api\RedisKeyInterface $keyManager */
-        $keyManager = $this->keyPool->getKeyManager($entity->getKeyType());
+        $keyManager = $this->keyPool->getKeyManager($entityConfig['type']);
 
-        return $keyManager->drop($keyManager->getId($entity));
+        return $keyManager->drop($keyManager->getId($entity, $entityConfig));
     }
 }

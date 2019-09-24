@@ -6,14 +6,13 @@
 
 namespace Magento\AsynchronousOperationsRedis\EntityManager\Operation;
 
-use Magento\AsynchronousOperationsRedis\Api\RedisIdentityInterface;
 use Magento\AsynchronousOperationsRedis\EntityManager\Hydrator;
 use Magento\AsynchronousOperationsRedis\Exception\CouldNotSaveToRedisException;
-use Magento\AsynchronousOperationsRedis\Exception\RedisIdentityNoFoundException;
 use Magento\AsynchronousOperationsRedis\KeyManager\KeyPool;
 use Magento\AsynchronousOperationsRedis\Model\Connection;
 use Magento\Framework\EntityManager\EventManager;
 use Magento\Framework\EntityManager\Operation\UpdateInterface;
+use Magento\AsynchronousOperationsRedis\Model\EntitiesPool;
 
 class Update implements UpdateInterface
 {
@@ -29,23 +28,29 @@ class Update implements UpdateInterface
     /** @var \Magento\AsynchronousOperationsRedis\KeyManager\KeyPool */
     private $keyPool;
 
+    /** @var \Magento\AsynchronousOperationsRedis\Model\EntitiesPool  */
+    private $entitiesPool;
+
     /**
-     * Create constructor.
+     * Update constructor.
      * @param EventManager $eventManager
      * @param Connection $connection
      * @param Hydrator $hydrator
      * @param KeyPool $keyPool
+     * @param EntitiesPool $entitiesPool
      */
     public function __construct(
         EventManager $eventManager,
         Connection $connection,
         Hydrator $hydrator,
-        KeyPool $keyPool
+        KeyPool $keyPool,
+        EntitiesPool $entitiesPool
     ) {
         $this->eventManager = $eventManager;
         $this->connection = $connection;
         $this->hydrator = $hydrator;
         $this->keyPool = $keyPool;
+        $this->entitiesPool = $entitiesPool;
     }
 
     /**
@@ -59,15 +64,13 @@ class Update implements UpdateInterface
      */
     public function execute($entity, $arguments = [])
     {
-        if (!$entity instanceof RedisIdentityInterface) {
-            throw new RedisIdentityNoFoundException(__('This entity does not has Redis identity'));
-        }
-
+        /** @var array $entityConfig */
+        $entityConfig = $this->entitiesPool->getEntityConfig($entity);
         /** @var \Magento\AsynchronousOperationsRedis\Api\RedisKeyInterface $keyManager */
-        $keyManager = $this->keyPool->getKeyManager($entity->getKeyType());
+        $keyManager = $this->keyPool->getKeyManager($entityConfig['type']);
 
-        if ($keyManager->ensureLockOff($keyManager->getId($entity))) {
-            $keyManager->setLock($keyManager->getId($entity));
+        if ($keyManager->ensureLockOff($keyManager->getId($entity, $entityConfig))) {
+            $keyManager->setLock($keyManager->getId($entity, $entityConfig));
 
             /** @var array $data */
             $data = $this->hydrator->setEntity($entity)
@@ -83,9 +86,9 @@ class Update implements UpdateInterface
             );
 
             /** @var bool $result */
-            $result = $keyManager->insert($keyManager->getId($entity), $data);
+            $result = $keyManager->insert($keyManager->getId($entity, $entityConfig), $data);
 
-            $keyManager->removeLock($keyManager->getId($entity));
+            $keyManager->removeLock($keyManager->getId($entity, $entityConfig));
 
             $this->eventManager->dispatch(
                 'redis_entity_manager_update_after',

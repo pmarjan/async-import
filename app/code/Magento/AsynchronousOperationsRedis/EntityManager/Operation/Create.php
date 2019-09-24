@@ -6,14 +6,13 @@
 
 namespace Magento\AsynchronousOperationsRedis\EntityManager\Operation;
 
-use Magento\AsynchronousOperationsRedis\Api\RedisIdentityInterface;
 use Magento\AsynchronousOperationsRedis\EntityManager\Hydrator;
 use Magento\AsynchronousOperationsRedis\Exception\CouldNotSaveToRedisException;
-use Magento\AsynchronousOperationsRedis\Exception\RedisIdentityNoFoundException;
 use Magento\AsynchronousOperationsRedis\KeyManager\KeyPool;
 use Magento\AsynchronousOperationsRedis\Model\Connection;
 use Magento\Framework\EntityManager\EventManager;
 use Magento\Framework\EntityManager\Operation\CreateInterface;
+use Magento\AsynchronousOperationsRedis\Model\EntitiesPool;
 
 class Create implements CreateInterface
 {
@@ -29,23 +28,29 @@ class Create implements CreateInterface
     /** @var \Magento\AsynchronousOperationsRedis\KeyManager\KeyPool */
     private $keyPool;
 
+    /** @var \Magento\AsynchronousOperationsRedis\Model\EntitiesPool  */
+    private $entitiesPool;
+
     /**
      * Create constructor.
      * @param EventManager $eventManager
      * @param Connection $connection
      * @param Hydrator $hydrator
      * @param KeyPool $keyPool
+     * @param EntitiesPool $entitiesPool
      */
     public function __construct(
         EventManager $eventManager,
         Connection $connection,
         Hydrator $hydrator,
-        KeyPool $keyPool
+        KeyPool $keyPool,
+        EntitiesPool $entitiesPool
     ) {
         $this->eventManager = $eventManager;
         $this->connection = $connection;
         $this->hydrator = $hydrator;
         $this->keyPool = $keyPool;
+        $this->entitiesPool = $entitiesPool;
     }
 
     /**
@@ -59,18 +64,10 @@ class Create implements CreateInterface
      */
     public function execute($entity, $arguments = [])
     {
-        if (!$entity instanceof RedisIdentityInterface) {
-            throw new RedisIdentityNoFoundException(__('This entity does not has Redis identity'));
-        }
-
+        /** @var array $entityConfig */
+        $entityConfig = $this->entitiesPool->getEntityConfig($entity);
         /** @var \Magento\AsynchronousOperationsRedis\Api\RedisKeyInterface $keyManager */
-        $keyManager = $this->keyPool->getKeyManager($entity->getKeyType());
-        /** @var string $id */
-        $id = $keyManager->getId($entity);
-
-        if (!$keyManager->validate($id)) {
-            throw new CouldNotSaveToRedisException(__('This entity has no proper redis key formation'));
-        }
+        $keyManager = $this->keyPool->getKeyManager($entityConfig['type']);
 
         /** @var array $data */
         $data = $this->hydrator->setEntity($entity)
@@ -86,7 +83,7 @@ class Create implements CreateInterface
         );
 
         /** @var bool $result */
-        $result = $keyManager->insert($keyManager->getId($entity), $data);
+        $result = $keyManager->insert($keyManager->getId($entity, $entityConfig), $data);
 
         $this->eventManager->dispatch(
             'redis_entity_manager_save_after',

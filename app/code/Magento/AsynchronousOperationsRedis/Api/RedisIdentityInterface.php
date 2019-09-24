@@ -19,14 +19,4 @@ interface RedisIdentityInterface
 
     /** @var string  */
     const TYPE_HASH = 'hash';
-
-    /**
-     * @return string
-     */
-    public function getRedisKey();
-
-    /**
-     * @return string
-     */
-    public function getKeyType();
 }
