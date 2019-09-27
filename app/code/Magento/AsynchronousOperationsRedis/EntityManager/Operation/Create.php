@@ -68,6 +68,8 @@ class Create implements CreateInterface
         $entityConfig = $this->entitiesPool->getEntityConfig($entity);
         /** @var \Magento\AsynchronousOperationsRedis\Api\RedisKeyInterface $keyManager */
         $keyManager = $this->keyPool->getKeyManager($entityConfig['type']);
+        /** @var string $key */
+        $key = $keyManager->getId($entity, $entityConfig);
 
         /** @var array $data */
         $data = $this->hydrator->setEntity($entity)
@@ -83,7 +85,7 @@ class Create implements CreateInterface
         );
 
         /** @var bool $result */
-        $result = $keyManager->insert($keyManager->getId($entity, $entityConfig), $data);
+        $result = $keyManager->insert($key, $data);
 
         $this->eventManager->dispatch(
             'redis_entity_manager_save_after',
@@ -98,6 +100,6 @@ class Create implements CreateInterface
             throw new CouldNotSaveToRedisException(__('This entity was not properly saved in redis'));
         }
 
-        return $entity;
+        return $entity->setData('key', $key);
     }
 }
