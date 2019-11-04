@@ -4,21 +4,23 @@
  * See COPYING.txt for license details.
  */
 
-namespace Magento\AsynchronousOperationsRedis\Model;
+namespace Magento\AsynchronousOperations\Model\Entity;
 
-use Magento\AsynchronousOperationsRedis\Api\ConfigInterface;
+use Magento\AsynchronousOperations\Model\Entity\ConfigInterface;
 use Magento\Framework\App\DeploymentConfig;
 
 class Config implements ConfigInterface
 {
-    /** @var string */
-    const CONNECT_PARAMS_PATH = self::OPERATIONS_NODE . '/' . self::REDIS . '/';
 
-    /** @var Magento\Framework\App\DeploymentConfig */
+    /** @var string */
+    const CONNECT_PARAMS_PATH = self::OPERATIONS_NODE . '/' . self::REDIS_SETTINGS . '/';
+
+    /** @var DeploymentConfig */
     private $deploymentConfig;
 
     /**
      * Config constructor.
+     *
      * @param DeploymentConfig $deploymentConfig
      */
     public function __construct(
@@ -28,26 +30,21 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Checks whether redis is required for Asynchronous Operations
-     *
-     * @return bool
+     * {@inheritdoc}
      */
-    public function requiresRedis()
-    {
+    public function getStorage(){
+
         /** @var array $queueOperationsConfig */
-        $queueOperationsConfig = $this->deploymentConfig->getConfigData(self::OPERATIONS_NODE);
+        $entityStorage = $this->deploymentConfig->get(
+            self::OPERATIONS_NODE . "/" . self::STORAGE_NODE,
+            self::DEFAULT_CONNECTION
+        );
+        return $entityStorage;
 
-        if ($queueOperationsConfig && is_array($queueOperationsConfig)) {
-            return $this->validateConfig($queueOperationsConfig);
-        }
-
-        return false;
     }
 
     /**
-     * Get host
-     *
-     * @return string
+     * {@inheritdoc}
      */
     public function getHost()
     {
@@ -55,9 +52,7 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Get port
-     *
-     * @return int
+     * {@inheritdoc}
      */
     public function getPort()
     {
@@ -65,9 +60,7 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Get connection timeout
-     *
-     * @return float
+     * {@inheritdoc}
      */
     public function getTimeout()
     {
@@ -75,9 +68,7 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Get unique string for persistent connections
-     *
-     * @return string
+     * {@inheritdoc}
      */
     public function getPersistentIdentifier()
     {
@@ -85,9 +76,7 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Get database
-     *
-     * @return int
+     * {@inheritdoc}
      */
     public function getDatabase()
     {
@@ -95,28 +84,11 @@ class Config implements ConfigInterface
     }
 
     /**
-     * Get password
-     *
-     * @return string
+     * {@inheritdoc}
      */
     public function getPassword()
     {
         return $this->deploymentConfig->get(self::CONNECT_PARAMS_PATH . self::PASSWORD);
     }
 
-    /**
-     * @param array $config
-     * @return bool
-     */
-    private function validateConfig($config)
-    {
-        if (isset($config[self::STORAGE_NODE])
-            && $config[self::STORAGE_NODE] == self::REDIS
-            && isset($config[self::REDIS])
-            && is_array($config[self::REDIS])) {
-            return true;
-        }
-
-        return false;
-    }
 }

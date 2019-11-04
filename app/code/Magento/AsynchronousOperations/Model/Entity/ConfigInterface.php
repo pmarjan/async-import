@@ -4,26 +4,29 @@
  * See COPYING.txt for license details.
  */
 
-namespace Magento\AsynchronousOperationsRedis\Api;
+namespace Magento\AsynchronousOperations\Model\Entity;
 
 interface ConfigInterface
 {
-    const OPERATIONS_NODE = 'queue_operations';
-    const STORAGE_NODE = 'save';
-    const REDIS = 'redis';
-    const HOST = 'host';
-    const PORT = 'port';
-    const TIMEOUT = 'timeout';
-    const PERSISTENT_IDENTIFIER = 'persistent_identifier';
-    const DATABASE = 'database';
-    const PASSWORD = 'password';
+    public const OPERATIONS_NODE = 'queue_operations';
+    public const STORAGE_NODE = 'save';
+
+    public const REDIS_SETTINGS = 'redis';
+    public const HOST = 'host';
+    public const PORT = 'port';
+    public const TIMEOUT = 'timeout';
+    public const PERSISTENT_IDENTIFIER = 'persistent_identifier';
+    public const DATABASE = 'database';
+    public const PASSWORD = 'password';
+
+    public const DEFAULT_CONNECTION = "db";
 
     /**
-     * Checks whether redis is required for Asynchronous Operations
+     * Get current enabled storage for asynchronous operations
      *
-     * @return bool
+     * @return string
      */
-    public function requiresRedis();
+    public function getStorage();
 
     /**
      * Get host
