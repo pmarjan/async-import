@@ -10,6 +10,7 @@ namespace Magento\AsynchronousOperations\Model\ResourceModel\Operation;
 
 use Magento\AsynchronousOperations\Api\Data\OperationInterface;
 use Magento\AsynchronousOperations\Api\Data\OperationInterfaceFactory;
+use Magento\AsynchronousOperations\Model\EntityManagerRegistry;
 use Magento\Framework\MessageQueue\MessageValidator;
 use Magento\Framework\MessageQueue\MessageEncoder;
 use Magento\Framework\Serialize\Serializer\Json;
@@ -46,15 +47,17 @@ class OperationRepository
     private $messageValidator;
 
     /**
+     * OperationRepository constructor.
      * @param OperationInterfaceFactory $operationFactory
-     * @param EntityManagerFactory $entityManagerFactory
+     * @param EntityManagerRegistry $entityManagerRegistry
      * @param MessageValidator $messageValidator
      * @param MessageEncoder $messageEncoder
      * @param Json $jsonSerializer
+     * @throws \Exception
      */
     public function __construct(
         OperationInterfaceFactory $operationFactory,
-        EntityManagerFactory $entityManagerFactory,
+        EntityManagerRegistry $entityManagerRegistry,
         MessageValidator $messageValidator,
         MessageEncoder $messageEncoder,
         Json $jsonSerializer
@@ -63,16 +66,17 @@ class OperationRepository
         $this->jsonSerializer = $jsonSerializer;
         $this->messageEncoder = $messageEncoder;
         $this->messageValidator = $messageValidator;
-        $this->entityManager = $entityManagerFactory->create();
+        $this->entityManager = $entityManagerRegistry->get();
     }
 
     /**
      * @param $topicName
      * @param $entityParams
      * @param $groupId
+     * @param $requestId
      * @return mixed
      */
-    public function createByTopic($topicName, $entityParams, $groupId)
+    public function createByTopic($topicName, $entityParams, $groupId, $requestId)
     {
         $this->messageValidator->validate($topicName, $entityParams);
         $encodedMessage = $this->messageEncoder->encode($topicName, $entityParams);
@@ -85,6 +89,7 @@ class OperationRepository
         $data = [
             'data' => [
                 OperationInterface::BULK_ID         => $groupId,
+                OperationInterface::REQUEST_ID      => $requestId,
                 OperationInterface::TOPIC_NAME      => $topicName,
                 OperationInterface::SERIALIZED_DATA => $this->jsonSerializer->serialize($serializedData),
                 OperationInterface::STATUS          => OperationInterface::STATUS_TYPE_OPEN,

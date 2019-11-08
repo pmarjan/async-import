@@ -23,7 +23,7 @@
         <arguments>
             <argument name="entityManagers" xsi:type="array">
                 <item name="db" xsi:type="object">Magento\Framework\EntityManager\EntityManager\Proxy</item>
-                <item name="redis" xsi:type="object">Magento\Framework\EntityManager\EntityManager\Proxy</item>
+                <item name="redis" xsi:type="object">Magento\AsynchronousOperationsRedis\EntityManager\EntityManager\Proxy</item>
                 <item name="memcache" xsi:type="object">Magento\Framework\EntityManager\EntityManager\Proxy</item>
             </argument>
         </arguments>

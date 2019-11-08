@@ -69,7 +69,7 @@ class Read implements ReadInterface
         /** @var \Magento\AsynchronousOperationsRedis\Api\RedisKeyInterface $keyManager */
         $keyManager = $this->keyPool->getKeyManager($entityConfig['type']);
         /** @var string $id */
-        $id = $entityConfig['key_prefix'] . RedisIdentityInterface::SEPARATOR . $identifier;
+        $id = $entityConfig['keyPrefix'] . RedisIdentityInterface::SEPARATOR . $identifier;
 
         if ($keyManager->exists($id)) {
             if ($keyManager->ensureLockOff($id)) {

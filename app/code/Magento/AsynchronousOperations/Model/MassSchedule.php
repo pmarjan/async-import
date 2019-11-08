@@ -139,7 +139,7 @@ class MassSchedule
             $requestItem = $this->itemStatusInterfaceFactory->create();
 
             try {
-                $operation = $this->operationRepository->createByTopic($topicName, $entityParams, $groupId);
+                $operation = $this->operationRepository->createByTopic($topicName, $entityParams, $groupId, $key);
                 $operations[] = $operation;
                 $requestItem->setId($key);
                 $requestItem->setStatus(ItemStatusInterface::STATUS_ACCEPTED);

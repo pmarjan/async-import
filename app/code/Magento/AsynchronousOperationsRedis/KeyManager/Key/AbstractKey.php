@@ -44,18 +44,10 @@ abstract class AbstractKey implements RedisKeyInterface
      */
     public function getId($entity, $entityConfig)
     {
-        /** @var string $identifier */
-        $identifier = '';
+        /** @var \Magento\AsynchronousOperationsRedis\KeyManager\Key\Identifier\GeneratorInterface $identifierGenerator */
+        $identifierGenerator = $entityConfig['identifierGenerator'];
 
-        if ($entityConfig['identifier'] == 'uuid') {
-            $identifier = $entity->getData('uuid') ? $entity->getData('uuid') : $entity->getData('bulk_uuid');
-        }
-
-        if ($entityConfig['identifier'] == 'serialized_data') {
-            $identifier = $this->encryptor->hash($entity->getData('serialized_data'), Encryptor::HASH_VERSION_SHA256);
-        }
-
-        return $entityConfig['key_prefix'] . RedisIdentityInterface::SEPARATOR . $identifier;
+        return $identifierGenerator->generateId($entity, $entityConfig);
     }
 
 

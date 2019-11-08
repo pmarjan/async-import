@@ -9,17 +9,17 @@
     <type name="Magento\AsynchronousOperationsRedis\Model\EntitiesPool">
         <arguments>
             <argument name="entities" xsi:type="array">
-                <item name="bulk_summary" xsi:type="array">
+                <item name="bulkSummary" xsi:type="array">
                     <item name="interface" xsi:type="string">Magento\AsynchronousOperations\Api\Data\BulkSummaryInterface</item>
                     <item name="type" xsi:type="string">hash</item>
-                    <item name="key_prefix" xsi:type="string">asynchronous.operations.bulk.summary</item>
-                    <item name="identifier" xsi:type="string">uuid</item>
+                    <item name="keyPrefix" xsi:type="string">asynchronous.operations.bulk.summary</item>
+                    <item name="identifierGenerator" xsi:type="object">Magento\AsynchronousOperationsRedis\KeyManager\Key\Identifier\BulkId\Proxy</item>
                 </item>
-                <item name="operation" xsi:type="array">
+                <item name="operations" xsi:type="array">
                     <item name="interface" xsi:type="string">Magento\AsynchronousOperations\Api\Data\OperationInterface</item>
                     <item name="type" xsi:type="string">hash</item>
-                    <item name="key_prefix" xsi:type="string">asynchronous.operations.operation</item>
-                    <item name="identifier" xsi:type="string">serialized_data</item>
+                    <item name="keyPrefix" xsi:type="string">asynchronous.operations.operation</item>
+                    <item name="identifierGenerator" xsi:type="object">Magento\AsynchronousOperationsRedis\KeyManager\Key\Identifier\RequestId\Proxy</item>
                 </item>
             </argument>
         </arguments>

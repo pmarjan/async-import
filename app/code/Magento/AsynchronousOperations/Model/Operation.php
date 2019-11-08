@@ -40,6 +40,22 @@ class Operation extends DataObject implements OperationInterface
     /**
      * @inheritDoc
      */
+    public function getRequestId()
+    {
+        return $this->getData(self::REQUEST_ID);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setRequestId($requestId)
+    {
+        return $this->setData(self::REQUEST_ID, $requestId);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function setBulkUuid($bulkId)
     {
         return $this->setData(self::BULK_ID, $bulkId);

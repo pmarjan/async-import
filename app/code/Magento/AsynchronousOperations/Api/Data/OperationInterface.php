@@ -13,6 +13,20 @@ namespace Magento\AsynchronousOperations\Api\Data;
  */
 interface OperationInterface extends \Magento\Framework\Bulk\OperationInterface
 {
+    /** @var string  */
+    const REQUEST_ID = 'request_id';
+
+    /**
+     * @return int
+     */
+    public function getRequestId();
+
+    /**
+     * @param int $requestId
+     * @return mixed
+     */
+    public function setRequestId($requestId);
+
     /**
      * Retrieve existing extension attributes object.
      *

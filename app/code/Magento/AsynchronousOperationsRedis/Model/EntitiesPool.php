@@ -9,7 +9,7 @@ namespace Magento\AsynchronousOperationsRedis\Model;
 use Magento\AsynchronousOperationsRedis\Exception\RedisIdentityNoFoundException;
 
 /**
- * Class OperationPool
+ * Class EntitiesPool
  */
 class EntitiesPool
 {
@@ -19,8 +19,8 @@ class EntitiesPool
     private $entities;
 
     /**
-     * OperationPool constructor.
-     * @param array $operations
+     * EntitiesPool constructor.
+     * @param array $entities
      */
     public function __construct(
         $entities = []

@@ -6,14 +6,14 @@
 
 namespace Magento\AsynchronousOperationsRedis\Model;
 
-use Magento\AsynchronousOperationsRedis\Api\ConfigInterface;
+use Magento\AsynchronousOperations\Model\Entity\ConfigInterface;
 
 class Connection
 {
     /** @var \Credis_Client */
     private $client;
 
-    /** @var \Magento\AsynchronousOperationsRedis\Api\ConfigInterface */
+    /** @var \Magento\AsynchronousOperations\Model\Entity\ConfigInterface */
     protected $config;
 
     /**
