@@ -12,7 +12,6 @@ use Magento\Framework\EntityManager\Operation\ReadInterface;
 use Magento\AsynchronousOperationsRedis\EntityManager\Hydrator;
 use Magento\AsynchronousOperationsRedis\KeyManager\KeyPool;
 use Magento\AsynchronousOperationsRedis\Model\EntitiesPool;
-use Magento\AsynchronousOperationsRedis\Api\RedisIdentityInterface;
 
 class Read implements ReadInterface
 {
@@ -69,7 +68,7 @@ class Read implements ReadInterface
         /** @var \Magento\AsynchronousOperationsRedis\Api\RedisKeyInterface $keyManager */
         $keyManager = $this->keyPool->getKeyManager($entityConfig['type']);
         /** @var string $id */
-        $id = $entityConfig['keyPrefix'] . RedisIdentityInterface::SEPARATOR . $identifier;
+        $id = $keyManager->getId($entity, $entityConfig);
 
         if ($keyManager->exists($id)) {
             if ($keyManager->ensureLockOff($id)) {

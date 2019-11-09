@@ -7,14 +7,18 @@ use Magento\AsynchronousOperationsRedis\Api\RedisIdentityInterface;
 
 class BulkId implements GeneratorInterface
 {
+    /** @var string  */
+    const KEY_PREFIX = 'AsynchronousOperations';
+
     /**
      * @param $entity
-     * @param $entityConfig
      * @return mixed|string
      */
-    public function generateId($entity, $entityConfig)
+    public function generateId($entity)
     {
-        return $entityConfig['keyPrefix'] .
+        return self::KEY_PREFIX .
+            RedisIdentityInterface::SEPARATOR .
+            (new \ReflectionClass($entity))->getShortName() .
             RedisIdentityInterface::SEPARATOR .
             $entity->getData(BulkSummaryInterface::BULK_ID);
     }

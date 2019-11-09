@@ -11,14 +11,12 @@
             <argument name="entities" xsi:type="array">
                 <item name="bulkSummary" xsi:type="array">
                     <item name="interface" xsi:type="string">Magento\AsynchronousOperations\Api\Data\BulkSummaryInterface</item>
-                    <item name="type" xsi:type="string">hash</item>
-                    <item name="keyPrefix" xsi:type="string">asynchronous.operations.bulk.summary</item>
+                    <item name="type" xsi:type="const">Magento\AsynchronousOperationsRedis\Api\RedisIdentityInterface::TYPE_HASH</item>
                     <item name="identifierGenerator" xsi:type="object">Magento\AsynchronousOperationsRedis\KeyManager\Key\Identifier\BulkId\Proxy</item>
                 </item>
                 <item name="operations" xsi:type="array">
                     <item name="interface" xsi:type="string">Magento\AsynchronousOperations\Api\Data\OperationInterface</item>
-                    <item name="type" xsi:type="string">hash</item>
-                    <item name="keyPrefix" xsi:type="string">asynchronous.operations.operation</item>
+                    <item name="type" xsi:type="const">Magento\AsynchronousOperationsRedis\Api\RedisIdentityInterface::TYPE_HASH</item>
                     <item name="identifierGenerator" xsi:type="object">Magento\AsynchronousOperationsRedis\KeyManager\Key\Identifier\RequestId\Proxy</item>
                 </item>
             </argument>
