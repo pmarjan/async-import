@@ -4,9 +4,8 @@
  * See COPYING.txt for license details.
  */
 
-namespace Magento\AsynchronousOperations\Model\Entity;
+namespace Magento\AsynchronousOperations\Model\Repository\Factory\Configuration;
 
-use Magento\AsynchronousOperations\Model\Entity\ConfigInterface;
 use Magento\Framework\App\DeploymentConfig;
 
 class Config implements ConfigInterface

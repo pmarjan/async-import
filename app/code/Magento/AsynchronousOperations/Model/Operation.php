@@ -6,13 +6,18 @@
 namespace Magento\AsynchronousOperations\Model;
 
 use Magento\AsynchronousOperations\Api\Data\OperationInterface;
-use Magento\Framework\DataObject;
+use Magento\Framework\Model\AbstractModel;
 
 /**
  * Class Operation
  */
-class Operation extends DataObject implements OperationInterface
+class Operation extends AbstractModel implements OperationInterface
 {
+    public function _construct()
+    {
+        $this->_init(ResourceModel\Operation::class);
+    }
+
     /**
      * @inheritDoc
      */

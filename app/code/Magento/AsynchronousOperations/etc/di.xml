@@ -18,7 +18,20 @@
     <preference for="Magento\AsynchronousOperations\Api\Data\DetailedBulkOperationsStatusInterface" type="Magento\AsynchronousOperations\Model\BulkStatus\Detailed" />
     <preference for="Magento\AsynchronousOperations\Api\Data\BulkOperationsStatusInterface" type="Magento\AsynchronousOperations\Model\BulkStatus\Short" />
     <preference for="Magento\AsynchronousOperations\Api\Data\OperationSearchResultsInterface" type="Magento\Framework\Api\SearchResults" />
-    <preference for="Magento\AsynchronousOperations\Api\OperationRepositoryInterface" type="Magento\AsynchronousOperations\Model\OperationRepository" />
+    <preference for="Magento\AsynchronousOperations\Api\BulkSummaryRepositoryInterface" type="Magento\AsynchronousOperations\Model\Repository\BulkSummary" />
+    <preference for="Magento\AsynchronousOperations\Api\OperationRepositoryInterface" type="Magento\AsynchronousOperations\Model\Repository\Operation" />
+    <preference for="Magento\AsynchronousOperations\Model\Repository\Factory\Configuration\ConfigInterface" type="Magento\AsynchronousOperations\Model\Repository\Factory\Configuration\Config" />
+    <type name="Magento\AsynchronousOperations\Model\Repository\Factory\Registry\Registry">
+        <arguments>
+            <argument name="types" xsi:type="array">
+                <item name="redis" xsi:type="object">Magento\AsynchronousOperationsRedis\EntityManager\EntityManager\Proxy</item>
+                <item name="db" xsi:type="array">
+                    <item name="BulkSummary" xsi:type="object">Magento\AsynchronousOperations\Api\BulkSummaryRepositoryInterface</item>
+                    <item name="Operation" xsi:type="object">Magento\AsynchronousOperations\Api\OperationRepositoryInterface</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
     <type name="Magento\AsynchronousOperations\Model\EntityManagerRegistry">
         <arguments>
             <argument name="entityManagers" xsi:type="array">

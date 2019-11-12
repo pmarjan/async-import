@@ -5,6 +5,7 @@
  */
 namespace Magento\AsynchronousOperations\Model;
 
+use Magento\AsynchronousOperations\Api\EntityRepositoryInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\ResourceConnection;
 use Magento\AsynchronousOperations\Api\Data\BulkSummaryInterface;
@@ -16,7 +17,7 @@ use Magento\Framework\EntityManager\MetadataPool;
 use Magento\AsynchronousOperations\Model\ResourceModel\Operation\CollectionFactory;
 use Magento\Authorization\Model\UserContextInterface;
 use Magento\AsynchronousOperations\Model\EntityManagerRegistry;
-
+use Magento\AsynchronousOperations\Model\Repository\Factory\Factory as RepositoryFactory;
 use Magento\AsynchronousOperationsRedis\EntityManager\EntityManagerFactory;
 
 /**
@@ -72,15 +73,23 @@ class BulkManagement implements \Magento\Framework\Bulk\BulkManagementInterface
     private $entityManagerRegistry;
 
     /**
+     * @var Magento\AsynchronousOperations\Model\Repository\Factory\Factory
+     */
+    private $repositoryFactory;
+
+    /**
      * BulkManagement constructor.
-     * @param EntityManagerFactory $entityManagerFactory
+     * @param EntityManager $entityManager
      * @param BulkSummaryInterfaceFactory $bulkSummaryFactory
      * @param CollectionFactory $operationCollectionFactory
      * @param BulkPublisherInterface $publisher
      * @param MetadataPool $metadataPool
      * @param ResourceConnection $resourceConnection
      * @param \Psr\Log\LoggerInterface $logger
-     * @param UserContextInterface $userContext
+     * @param \Magento\AsynchronousOperations\Model\EntityManagerRegistry $entityManagerRegistry
+     * @param RepositoryFactory $repositoryFactory
+     * @param UserContextInterface|null $userContext
+     * @throws \Exception
      */
     public function __construct(
         EntityManager $entityManager,
@@ -91,6 +100,7 @@ class BulkManagement implements \Magento\Framework\Bulk\BulkManagementInterface
         ResourceConnection $resourceConnection,
         \Psr\Log\LoggerInterface $logger,
         EntityManagerRegistry $entityManagerRegistry,
+        RepositoryFactory $repositoryFactory,
         UserContextInterface $userContext = null
 
     ) {
@@ -102,6 +112,7 @@ class BulkManagement implements \Magento\Framework\Bulk\BulkManagementInterface
         $this->logger = $logger;
         $this->entityManagerRegistry = $entityManagerRegistry;
         $this->entityManager = $this->entityManagerRegistry->get();
+        $this->repositoryFactory = $repositoryFactory;
         $this->userContext = $userContext ?: ObjectManager::getInstance()->get(UserContextInterface::class);
     }
 
@@ -110,29 +121,28 @@ class BulkManagement implements \Magento\Framework\Bulk\BulkManagementInterface
      */
     public function scheduleBulk($bulkUuid, array $operations, $description, $userId = null)
     {
-
-        $metadata = $this->metadataPool->getMetadata(BulkSummaryInterface::class);
-        $connection = $this->resourceConnection->getConnectionByName($metadata->getEntityConnectionName());
-        // save bulk summary and related operations
-        $connection->beginTransaction();
         $userType = $this->userContext->getUserType();
         if ($userType === null) {
             $userType = UserContextInterface::USER_TYPE_ADMIN;
         }
         try {
             /** @var \Magento\AsynchronousOperations\Api\Data\BulkSummaryInterface $bulkSummary */
-            $bulkSummary = $this->bulkSummaryFactory->create();
-            $this->entityManager->load($bulkSummary, $bulkUuid);
+            $bulkSummary = $this->bulkSummaryFactory->create();;
+            /** @var EntityRepositoryInterface $entityRepository */
+            $entityRepository = $this->repositoryFactory->create($bulkSummary);
+            try {
+                $bulkSummary = $entityRepository->getByUuid($bulkUuid);
+            } catch (\Exception $e) {
+            }
             $bulkSummary->setBulkId($bulkUuid);
             $bulkSummary->setDescription($description);
             $bulkSummary->setUserId($userId);
             $bulkSummary->setUserType($userType);
             $bulkSummary->setOperationCount((int)$bulkSummary->getOperationCount() + count($operations));
-            $this->entityManager->save($bulkSummary);
 
-            $connection->commit();
+            $entityRepository->save($bulkSummary);
+
         } catch (\Exception $exception) {
-            $connection->rollBack();
             $this->logger->critical($exception->getMessage());
             return false;
         }

@@ -18,7 +18,7 @@ use Magento\AsynchronousOperations\Api\Data\ItemStatusInterface;
 use Magento\Framework\Bulk\BulkManagementInterface;
 use Magento\Framework\Exception\BulkException;
 use Psr\Log\LoggerInterface;
-use Magento\AsynchronousOperations\Model\ResourceModel\Operation\OperationRepository;
+use Magento\AsynchronousOperations\Model\Repository\Operation;
 use Magento\Authorization\Model\UserContextInterface;
 use Magento\Framework\Encryption\Encryptor;
 
@@ -55,7 +55,7 @@ class MassSchedule
     private $logger;
 
     /**
-     * @var OperationRepository
+     * @var Operation
      */
     private $operationRepository;
 
@@ -77,7 +77,7 @@ class MassSchedule
      * @param AsyncResponseInterfaceFactory $asyncResponseFactory
      * @param BulkManagementInterface $bulkManagement
      * @param LoggerInterface $logger
-     * @param OperationRepository $operationRepository
+     * @param Operation $operationRepository
      * @param UserContextInterface $userContext
      * @param Encryptor|null $encryptor
      */
@@ -87,7 +87,7 @@ class MassSchedule
         AsyncResponseInterfaceFactory $asyncResponseFactory,
         BulkManagementInterface $bulkManagement,
         LoggerInterface $logger,
-        OperationRepository $operationRepository,
+        Operation $operationRepository,
         UserContextInterface $userContext = null,
         Encryptor $encryptor = null
     ) {

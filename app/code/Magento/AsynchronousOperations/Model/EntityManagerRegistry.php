@@ -5,7 +5,7 @@
  */
 namespace Magento\AsynchronousOperations\Model;
 
-use Magento\AsynchronousOperations\Model\Entity\ConfigInterface;
+use Magento\AsynchronousOperations\Model\Repository\Factory\Configuration\ConfigInterface;
 
 /**
  * Class EntityManagerRegistry

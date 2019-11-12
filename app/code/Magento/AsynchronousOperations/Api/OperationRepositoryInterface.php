@@ -14,7 +14,7 @@ namespace Magento\AsynchronousOperations\Api;
  * An bulk is a group of queue messages. An bulk operation item is a queue message.
  * @api
  */
-interface OperationRepositoryInterface
+interface OperationRepositoryInterface extends EntityRepositoryInterface
 {
     /**
      * Lists the bulk operation items that match specified search criteria.

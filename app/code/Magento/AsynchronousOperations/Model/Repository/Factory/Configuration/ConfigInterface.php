@@ -4,7 +4,7 @@
  * See COPYING.txt for license details.
  */
 
-namespace Magento\AsynchronousOperations\Model\Entity;
+namespace Magento\AsynchronousOperations\Model\Repository\Factory\Configuration;
 
 interface ConfigInterface
 {

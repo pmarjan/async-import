@@ -18,6 +18,6 @@ class Bulk extends \Magento\Framework\Model\ResourceModel\Db\AbstractDb
      */
     protected function _construct()
     {
-        $this->_init('magento_bulk', 'uuid');
+        $this->_init('magento_bulk', 'id');
     }
 }
