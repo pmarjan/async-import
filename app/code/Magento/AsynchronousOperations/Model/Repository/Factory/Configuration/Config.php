@@ -31,15 +31,21 @@ class Config implements ConfigInterface
     /**
      * {@inheritdoc}
      */
-    public function getStorage(){
+    public function getStorage($connection = null){
+
+        if (!$connection) {
+            $key = self::OPERATIONS_NODE . "/" . self::STORAGE_NODE;
+        } else {
+            $key = self::OPERATIONS_NODE . "/" . $connection;
+        }
 
         /** @var array $queueOperationsConfig */
         $entityStorage = $this->deploymentConfig->get(
-            self::OPERATIONS_NODE . "/" . self::STORAGE_NODE,
+            $key,
             self::DEFAULT_CONNECTION
         );
-        return $entityStorage;
 
+        return $entityStorage;
     }
 
     /**

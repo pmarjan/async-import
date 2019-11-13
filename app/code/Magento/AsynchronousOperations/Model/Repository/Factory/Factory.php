@@ -5,9 +5,13 @@ namespace Magento\AsynchronousOperations\Model\Repository\Factory;
 
 use Magento\AsynchronousOperations\Model\Repository\Factory\Registry\Registry;
 use Magento\AsynchronousOperations\Model\Repository\Factory\Configuration\Config;
+use Magento\Framework\Module\ModuleManagerInterface;
 
 class Factory
 {
+    /** @var Magento\Framework\Module\ModuleManagerInterface  */
+    private $moduleManager;
+
     /** @var Magento\AsynchronousOperations\Model\Repository\Factory\Registry\Registry */
     private $registry;
 
@@ -15,14 +19,17 @@ class Factory
     private $config;
 
     /**
-     * BulkSummary constructor.
+     * Factory constructor.
+     * @param ModuleManagerInterface $moduleManager
      * @param Registry $registry
      * @param Config $config
      */
     public function __construct(
+        ModuleManagerInterface $moduleManager,
         Registry $registry,
         Config $config
     ) {
+        $this->moduleManager = $moduleManager;
         $this->registry = $registry;
         $this->config = $config;
     }
@@ -35,7 +42,7 @@ class Factory
     public function create($entity)
     {
         /** @var string $activeEntityStorage */
-        $activeEntityStorage = $this->config->getStorage();
+        $activeEntityStorage = $this->config->getStorage($this->getStorageFlag());
         /** @var array $registryTypes */
         $registryTypes = $this->registry->getTypes();
 
@@ -59,5 +66,20 @@ class Factory
         }
 
         return $abstractRepository->setEntity($entity);
+    }
+
+    /**
+     * @return string
+     */
+    private function getStorageFlag()
+    {
+        /** @var string $storageFlag */
+        $storageFlag = null;
+
+        if (!$this->moduleManager->isEnabled('Magento_AsynchronousOperationsRedis')) {
+            $storageFlag = 'db';
+        }
+
+        return $storageFlag;
     }
 }
