@@ -12,13 +12,10 @@ use Magento\AsynchronousOperations\Api\Data\BulkSummaryInterface;
 use Magento\AsynchronousOperations\Api\Data\BulkSummaryInterfaceFactory;
 use Magento\AsynchronousOperations\Api\Data\OperationInterface;
 use Magento\Framework\MessageQueue\BulkPublisherInterface;
-use Magento\Framework\EntityManager\EntityManager;
 use Magento\Framework\EntityManager\MetadataPool;
 use Magento\AsynchronousOperations\Model\ResourceModel\Operation\CollectionFactory;
 use Magento\Authorization\Model\UserContextInterface;
-use Magento\AsynchronousOperations\Model\EntityManagerRegistry;
 use Magento\AsynchronousOperations\Model\Repository\Factory\Factory as RepositoryFactory;
-use Magento\AsynchronousOperationsRedis\EntityManager\EntityManagerFactory;
 
 /**
  * Class BulkManagement
@@ -27,11 +24,6 @@ use Magento\AsynchronousOperationsRedis\EntityManager\EntityManagerFactory;
  */
 class BulkManagement implements \Magento\Framework\Bulk\BulkManagementInterface
 {
-    /**
-     * @var EntityManager
-     */
-    private $entityManager;
-
     /**
      * @var BulkSummaryInterfaceFactory
      */
@@ -68,31 +60,23 @@ class BulkManagement implements \Magento\Framework\Bulk\BulkManagementInterface
     private $logger;
 
     /**
-     * @var \Magento\AsynchronousOperations\Model\EntityManagerRegistry
-     */
-    private $entityManagerRegistry;
-
-    /**
      * @var Magento\AsynchronousOperations\Model\Repository\Factory\Factory
      */
     private $repositoryFactory;
 
     /**
      * BulkManagement constructor.
-     * @param EntityManager $entityManager
      * @param BulkSummaryInterfaceFactory $bulkSummaryFactory
      * @param CollectionFactory $operationCollectionFactory
      * @param BulkPublisherInterface $publisher
      * @param MetadataPool $metadataPool
      * @param ResourceConnection $resourceConnection
      * @param \Psr\Log\LoggerInterface $logger
-     * @param \Magento\AsynchronousOperations\Model\EntityManagerRegistry $entityManagerRegistry
      * @param RepositoryFactory $repositoryFactory
      * @param UserContextInterface|null $userContext
      * @throws \Exception
      */
     public function __construct(
-        EntityManager $entityManager,
         BulkSummaryInterfaceFactory $bulkSummaryFactory,
         CollectionFactory $operationCollectionFactory,
         BulkPublisherInterface $publisher,
