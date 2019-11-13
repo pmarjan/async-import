@@ -49,6 +49,15 @@ class Factory
             return $this->registry->getDbRepository($entity);
         }
 
-        return $registryTypes[$activeEntityStorage];
+        /** @var \Magento\AsynchronousOperations\Model\Repository\AbstractRepository $abstractRepository */
+        $abstractRepository = $registryTypes[$activeEntityStorage];
+
+        if (!$abstractRepository instanceof \Magento\AsynchronousOperations\Model\Repository\AbstractRepository) {
+            throw new \Exception(
+                __('Invalid abstract repository %1 provided in DI', $abstractRepository)
+            );
+        }
+
+        return $abstractRepository->setEntity($entity);
     }
 }

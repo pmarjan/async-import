@@ -99,7 +99,6 @@ class BulkManagement implements \Magento\Framework\Bulk\BulkManagementInterface
         MetadataPool $metadataPool,
         ResourceConnection $resourceConnection,
         \Psr\Log\LoggerInterface $logger,
-        EntityManagerRegistry $entityManagerRegistry,
         RepositoryFactory $repositoryFactory,
         UserContextInterface $userContext = null
 
@@ -110,8 +109,6 @@ class BulkManagement implements \Magento\Framework\Bulk\BulkManagementInterface
         $this->resourceConnection = $resourceConnection;
         $this->publisher = $publisher;
         $this->logger = $logger;
-        $this->entityManagerRegistry = $entityManagerRegistry;
-        $this->entityManager = $this->entityManagerRegistry->get();
         $this->repositoryFactory = $repositoryFactory;
         $this->userContext = $userContext ?: ObjectManager::getInstance()->get(UserContextInterface::class);
     }
@@ -127,7 +124,7 @@ class BulkManagement implements \Magento\Framework\Bulk\BulkManagementInterface
         }
         try {
             /** @var \Magento\AsynchronousOperations\Api\Data\BulkSummaryInterface $bulkSummary */
-            $bulkSummary = $this->bulkSummaryFactory->create();;
+            $bulkSummary = $this->bulkSummaryFactory->create();
             /** @var EntityRepositoryInterface $entityRepository */
             $entityRepository = $this->repositoryFactory->create($bulkSummary);
             try {

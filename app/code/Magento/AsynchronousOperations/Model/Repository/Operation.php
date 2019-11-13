@@ -8,9 +8,7 @@ declare(strict_types=1);
 
 namespace Magento\AsynchronousOperations\Model\Repository;
 
-use Magento\AsynchronousOperations\Api\Data\OperationInterface;
 use Magento\AsynchronousOperations\Api\Data\OperationInterfaceFactory;
-use Magento\AsynchronousOperations\Model\EntityManagerRegistry;
 use Magento\Framework\EntityManager\EntityManager;
 use Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface;
 use Magento\AsynchronousOperations\Api\Data\OperationSearchResultsInterfaceFactory as SearchResultFactory;
@@ -21,9 +19,6 @@ use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\AsynchronousOperations\Model\ResourceModel\Operation as OperationResource;
-use Magento\Framework\MessageQueue\MessageEncoder;
-use Magento\Framework\MessageQueue\MessageValidator;
-use Magento\Framework\Serialize\Serializer\Json;
 
 /**
  * Repository class for @see \Magento\AsynchronousOperations\Api\OperationRepositoryInterface
@@ -76,21 +71,6 @@ class Operation implements \Magento\AsynchronousOperations\Api\OperationReposito
     private $operationFactory;
 
     /**
-     * @var Json
-     */
-    private $jsonSerializer;
-
-    /**
-     * @var MessageEncoder
-     */
-    private $messageEncoder;
-
-    /**
-     * @var MessageValidator
-     */
-    private $messageValidator;
-
-    /**
      * Operation constructor.
      * @param EntityManager $entityManager
      * @param CollectionFactory $collectionFactory
@@ -101,9 +81,6 @@ class Operation implements \Magento\AsynchronousOperations\Api\OperationReposito
      * @param \Psr\Log\LoggerInterface $logger
      * @param OperationResource $operationResource
      * @param OperationInterfaceFactory $operationFactory
-     * @param MessageValidator $messageValidator
-     * @param MessageEncoder $messageEncoder
-     * @param Json $jsonSerializer
      */
     public function __construct(
         EntityManager $entityManager,
@@ -114,10 +91,7 @@ class Operation implements \Magento\AsynchronousOperations\Api\OperationReposito
         CollectionProcessorInterface $collectionProcessor,
         \Psr\Log\LoggerInterface $logger,
         OperationResource $operationResource,
-        OperationInterfaceFactory $operationFactory,
-        MessageValidator $messageValidator,
-        MessageEncoder $messageEncoder,
-        Json $jsonSerializer
+        OperationInterfaceFactory $operationFactory
     ) {
         $this->entityManager = $entityManager;
         $this->collectionFactory = $collectionFactory;
@@ -129,42 +103,6 @@ class Operation implements \Magento\AsynchronousOperations\Api\OperationReposito
         $this->collectionProcessor = $collectionProcessor;
         $this->operationResource = $operationResource;
         $this->operationFactory = $operationFactory;
-        $this->jsonSerializer = $jsonSerializer;
-        $this->messageEncoder = $messageEncoder;
-        $this->messageValidator = $messageValidator;
-    }
-
-    /**
-     * @param $topicName
-     * @param $entityParams
-     * @param $groupId
-     * @param $requestId
-     * @return mixed
-     */
-    public function createByTopic($topicName, $entityParams, $groupId, $requestId)
-    {
-        $this->messageValidator->validate($topicName, $entityParams);
-        $encodedMessage = $this->messageEncoder->encode($topicName, $entityParams);
-
-        $serializedData = [
-            'entity_id'        => null,
-            'entity_link'      => '',
-            'meta_information' => $encodedMessage,
-        ];
-        $data = [
-            'data' => [
-                OperationInterface::BULK_ID         => $groupId,
-                OperationInterface::REQUEST_ID      => $requestId,
-                OperationInterface::TOPIC_NAME      => $topicName,
-                OperationInterface::SERIALIZED_DATA => $this->jsonSerializer->serialize($serializedData),
-                OperationInterface::STATUS          => OperationInterface::STATUS_TYPE_OPEN,
-            ],
-        ];
-
-        /** @var \Magento\AsynchronousOperations\Api\Data\OperationInterface $operation */
-        $operation = $this->operationFactory->create($data);
-        $operation->setHasDataChanges(true);
-        return $this->save($operation);
     }
 
     /**

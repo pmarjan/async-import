@@ -42,12 +42,12 @@ abstract class AbstractKey implements RedisKeyInterface
      * @param array $entityConfig
      * @return string
      */
-    public function getId($entity, $entityConfig)
+    public function getId($entity, $entityConfig, $identifier = null)
     {
         /** @var \Magento\AsynchronousOperationsRedis\KeyManager\Key\Identifier\GeneratorInterface $identifierGenerator */
         $identifierGenerator = $entityConfig['identifierGenerator'];
 
-        return $identifierGenerator->generateId($entity);
+        return $identifierGenerator->generateId($entity, $identifier);
     }
 
 

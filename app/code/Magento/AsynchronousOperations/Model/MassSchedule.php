@@ -8,6 +8,9 @@ declare(strict_types=1);
 
 namespace Magento\AsynchronousOperations\Model;
 
+use Magento\AsynchronousOperations\Api\Data\OperationInterface;
+use Magento\AsynchronousOperations\Api\Data\OperationInterfaceFactory;
+use Magento\AsynchronousOperations\Api\EntityRepositoryInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\DataObject\IdentityGeneratorInterface;
 use Magento\Framework\Exception\LocalizedException;
@@ -17,10 +20,13 @@ use Magento\AsynchronousOperations\Api\Data\AsyncResponseInterfaceFactory;
 use Magento\AsynchronousOperations\Api\Data\ItemStatusInterface;
 use Magento\Framework\Bulk\BulkManagementInterface;
 use Magento\Framework\Exception\BulkException;
+use Magento\Framework\MessageQueue\MessageEncoder;
+use Magento\Framework\MessageQueue\MessageValidator;
+use Magento\Framework\Serialize\Serializer\Json;
 use Psr\Log\LoggerInterface;
-use Magento\AsynchronousOperations\Model\Repository\Operation;
 use Magento\Authorization\Model\UserContextInterface;
 use Magento\Framework\Encryption\Encryptor;
+use Magento\AsynchronousOperations\Model\Repository\Factory\Factory as RepositoryFactory;
 
 /**
  * Class MassSchedule used for adding multiple entities as Operations to Bulk Management with the status tracking
@@ -55,11 +61,6 @@ class MassSchedule
     private $logger;
 
     /**
-     * @var Operation
-     */
-    private $operationRepository;
-
-    /**
      * @var \Magento\Authorization\Model\UserContextInterface
      */
     private $userContext;
@@ -70,16 +71,20 @@ class MassSchedule
     private $encryptor;
 
     /**
-     * Initialize dependencies.
-     *
+     * @var Magento\AsynchronousOperations\Model\Repository\Factory\Factory
+     */
+    private $repositoryFactory;
+
+    /**
+     * MassSchedule constructor.
      * @param IdentityGeneratorInterface $identityService
      * @param ItemStatusInterfaceFactory $itemStatusInterfaceFactory
      * @param AsyncResponseInterfaceFactory $asyncResponseFactory
      * @param BulkManagementInterface $bulkManagement
      * @param LoggerInterface $logger
-     * @param Operation $operationRepository
-     * @param UserContextInterface $userContext
+     * @param UserContextInterface|null $userContext
      * @param Encryptor|null $encryptor
+     * @param RepositoryFactory $repositoryFactory
      */
     public function __construct(
         IdentityGeneratorInterface $identityService,
@@ -87,18 +92,26 @@ class MassSchedule
         AsyncResponseInterfaceFactory $asyncResponseFactory,
         BulkManagementInterface $bulkManagement,
         LoggerInterface $logger,
-        Operation $operationRepository,
         UserContextInterface $userContext = null,
-        Encryptor $encryptor = null
+        Encryptor $encryptor = null,
+        RepositoryFactory $repositoryFactory,
+        OperationInterfaceFactory $operationFactory,
+        MessageValidator $messageValidator,
+        MessageEncoder $messageEncoder,
+        Json $jsonSerializer
     ) {
         $this->identityService = $identityService;
         $this->itemStatusInterfaceFactory = $itemStatusInterfaceFactory;
         $this->asyncResponseFactory = $asyncResponseFactory;
         $this->bulkManagement = $bulkManagement;
         $this->logger = $logger;
-        $this->operationRepository = $operationRepository;
         $this->userContext = $userContext ?: ObjectManager::getInstance()->get(UserContextInterface::class);
         $this->encryptor = $encryptor ?: ObjectManager::getInstance()->get(Encryptor::class);
+        $this->repositoryFactory = $repositoryFactory;
+        $this->operationFactory = $operationFactory;
+        $this->jsonSerializer = $jsonSerializer;
+        $this->messageEncoder = $messageEncoder;
+        $this->messageValidator = $messageValidator;
     }
 
     /**
@@ -139,7 +152,11 @@ class MassSchedule
             $requestItem = $this->itemStatusInterfaceFactory->create();
 
             try {
-                $operation = $this->operationRepository->createByTopic($topicName, $entityParams, $groupId, $key);
+                /** @var OperationInterface $operation */
+                $operation = $this->initializeOperationByTopic($topicName, $entityParams, $groupId, $key);
+                /** @var EntityRepositoryInterface $entityRepository */
+                $entityRepository = $this->repositoryFactory->create($operation);
+                $entityRepository->save($operation);
                 $operations[] = $operation;
                 $requestItem->setId($key);
                 $requestItem->setStatus(ItemStatusInterface::STATUS_ACCEPTED);
@@ -180,5 +197,39 @@ class MassSchedule
         }
 
         return $asyncResponse;
+    }
+
+    /**
+     * @param $topicName
+     * @param $entityParams
+     * @param $groupId
+     * @param $requestId
+     * @return OperationInterface
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
+    private function initializeOperationByTopic($topicName, $entityParams, $groupId, $requestId)
+    {
+        $this->messageValidator->validate($topicName, $entityParams);
+        $encodedMessage = $this->messageEncoder->encode($topicName, $entityParams);
+
+        $serializedData = [
+            'entity_id'        => null,
+            'entity_link'      => '',
+            'meta_information' => $encodedMessage,
+        ];
+        $data = [
+            'data' => [
+                OperationInterface::BULK_ID         => $groupId,
+                OperationInterface::REQUEST_ID      => $requestId,
+                OperationInterface::TOPIC_NAME      => $topicName,
+                OperationInterface::SERIALIZED_DATA => $this->jsonSerializer->serialize($serializedData),
+                OperationInterface::STATUS          => OperationInterface::STATUS_TYPE_OPEN,
+            ],
+        ];
+
+        /** @var \Magento\AsynchronousOperations\Api\Data\OperationInterface $operation */
+        $operation = $this->operationFactory->create($data);
+        $operation->setHasDataChanges(true);
+        return $operation;
     }
 }

@@ -6,7 +6,8 @@ interface GeneratorInterface
 {
     /**
      * @param $entity
+     * @param $identifier
      * @return mixed
      */
-    public function generateId($entity);
+    public function generateId($entity, $identifier);
 }

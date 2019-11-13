@@ -12,14 +12,18 @@ class BulkId implements GeneratorInterface
 
     /**
      * @param $entity
+     * @param string $identifier
      * @return mixed|string
      */
-    public function generateId($entity)
+    public function generateId($entity, $identifier = null)
     {
+        /** @var string $bulkIdentifier */
+        $bulkIdentifier = $identifier != null ? $identifier : $entity->getData(BulkSummaryInterface::BULK_ID);
+
         return self::KEY_PREFIX .
             RedisIdentityInterface::SEPARATOR .
             (new \ReflectionClass($entity))->getShortName() .
             RedisIdentityInterface::SEPARATOR .
-            $entity->getData(BulkSummaryInterface::BULK_ID);
+            $bulkIdentifier;
     }
 }
