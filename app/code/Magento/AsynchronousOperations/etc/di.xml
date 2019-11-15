@@ -24,12 +24,16 @@
     <type name="Magento\AsynchronousOperations\Model\Repository\Factory\Registry\Registry">
         <arguments>
             <argument name="types" xsi:type="array">
-                <item name="redis" xsi:type="object">Magento\AsynchronousOperationsRedis\Model\Repository\Entity</item>
+                <item name="redis" xsi:type="array">
+                    <item name="BulkSummary" xsi:type="object">Magento\AsynchronousOperationsRedis\Api\RedisEntityRepositoryInterface</item>
+                    <item name="Operation" xsi:type="object">Magento\AsynchronousOperationsRedis\Api\RedisEntityRepositoryInterface</item>
+                </item>
                 <item name="db" xsi:type="array">
                     <item name="BulkSummary" xsi:type="object">Magento\AsynchronousOperations\Api\BulkSummaryRepositoryInterface</item>
                     <item name="Operation" xsi:type="object">Magento\AsynchronousOperations\Api\OperationRepositoryInterface</item>
                 </item>
             </argument>
+            <argument name="defaultConnection" xsi:type="string">db</argument>
         </arguments>
     </type>
     <type name="Magento\Framework\EntityManager\MetadataPool">

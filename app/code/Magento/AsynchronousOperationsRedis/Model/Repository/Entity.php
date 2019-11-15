@@ -5,7 +5,7 @@ namespace Magento\AsynchronousOperationsRedis\Model\Repository;
 use Magento\AsynchronousOperationsRedis\EntityManager\EntityManager;
 use Magento\AsynchronousOperations\Model\Repository\AbstractRepository;
 
-class Entity extends AbstractRepository implements \Magento\AsynchronousOperations\Api\BulkSummaryRepositoryInterface
+class Entity extends AbstractRepository implements \Magento\AsynchronousOperations\Api\EntityRepositoryInterface
 {
     /**
      * @var EntityManager

@@ -9,7 +9,7 @@ use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\AsynchronousOperations\Api\Data\BulkSummaryInterfaceFactory;
 
-class BulkSummary implements \Magento\AsynchronousOperations\Api\BulkSummaryRepositoryInterface
+class BulkSummary extends AbstractRepository implements \Magento\AsynchronousOperations\Api\BulkSummaryRepositoryInterface
 {
     /** @var BulkSummaryResource */
     private $bulkSummaryResource;

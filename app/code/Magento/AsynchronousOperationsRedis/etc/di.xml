@@ -6,6 +6,7 @@
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="Magento\AsynchronousOperationsRedis\Api\RedisEntityRepositoryInterface" type="Magento\AsynchronousOperationsRedis\Model\Repository\Entity" />
     <type name="Magento\AsynchronousOperationsRedis\Model\EntitiesPool">
         <arguments>
             <argument name="entities" xsi:type="array">

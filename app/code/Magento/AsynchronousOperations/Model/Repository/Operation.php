@@ -23,7 +23,7 @@ use Magento\AsynchronousOperations\Model\ResourceModel\Operation as OperationRes
 /**
  * Repository class for @see \Magento\AsynchronousOperations\Api\OperationRepositoryInterface
  */
-class Operation implements \Magento\AsynchronousOperations\Api\OperationRepositoryInterface
+class Operation extends AbstractRepository implements \Magento\AsynchronousOperations\Api\OperationRepositoryInterface
 {
     /**
      * @var EntityManager
